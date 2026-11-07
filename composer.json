@@ -1,0 +1,42 @@
+{
+    "name": "youvision/think-workerman",
+    "description": "基于 GatewayWorker 的 ThinkPHP8 WebSocket 即时通讯扩展，支持客户端绑定 uid、心跳检测与 wss",
+    "type": "library",
+    "license": "MIT",
+    "keywords": [
+        "thinkphp",
+        "thinkphp8",
+        "workerman",
+        "gatewayworker",
+        "websocket",
+        "chat"
+    ],
+    "authors": [
+        {
+            "name": "youvision"
+        }
+    ],
+    "require": {
+        "php": "^8.0",
+        "topthink/framework": "^8.0",
+        "workerman/gateway-worker": "^4.0",
+        "workerman/gatewayclient": "^3.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "youvision\\": "src"
+        }
+    },
+    "extra": {
+        "think": {
+            "config": {
+                "workerman": "src/config/workerman.php"
+            },
+            "services": [
+                "youvision\\service\\Workerman"
+            ]
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
