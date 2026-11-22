@@ -19,8 +19,6 @@
 - 可继承的默认事件类，业务只需覆盖钩子
 - wss 支持（推荐交给 Nginx）
 
-> 2.0 有不兼容变更，从 1.x 升级请看文末「升级指南」。
-
 ## 环境要求
 
 - PHP >= 8.3
@@ -140,7 +138,7 @@ Push::kickClient($client_id);        // 断开单个连接
 | `data` | 业务数据，始终是对象，无数据时为 `{}` |
 | `msg_id` | 可选。客户端请求带上后，服务端回复会原样带回；`Push` 主动推送时自动生成，可用于去重与回执 |
 
-客户端发送的扁平格式（如 `{"type":"auth","token":"..."}`）仍然兼容，`type`、`msg_id` 以外的字段会被当作 `data`。
+`type` 必须是非空字符串；客户端发送的业务字段必须放在 `data` 中，顶层其他字段会被忽略。
 
 ### 消息类型
 
@@ -301,7 +299,6 @@ GatewayWorker 还会调用事件类中的 `onWorkerStart($worker)`、`onWorkerSt
 | `route_unknown_reply` | `true` | 未匹配路由时是否回复 `error(unknown_type)` |
 | `auth` | `null` | 鉴权器：`Authenticator` 类名或 callable，未配置时拒绝所有绑定 |
 | `auth_timeout` | `10` | 连接后多少秒内必须完成鉴权，0 不限制 |
-| `legacy_types` | `true` | 兼容 1.x 的数字类型 11 / 12（type=12 也必须带 token） |
 | `gateway_name` | `gateway` | gateway 进程名称 |
 | `gateway_address` | `websocket://127.0.0.1:8201` | WebSocket 监听地址，默认仅本机 |
 | `gateway_count` | `1` | gateway 进程数量 |
@@ -346,21 +343,6 @@ business 是常驻进程，在事件类或鉴权器里使用 `Db` 时，MySQL �
 ### 推送方位置
 
 ThinkPHP（FPM）调用 `Push` / `Gateway::sendXxx` 时需要能连到 `register_address` 和 gateway 内部端口，建议与推送服务部署在同一台机器或同一内网。
-
-## 升级指南（1.x → 2.0）
-
-1. 实现 `Authenticator` 并配置 `workerman.auth`，否则客户端无法绑定。
-2. 客户端改为发送 `{"type":"auth","token":"..."}`，或在握手时带 `Authorization: Bearer`。旧的 `{"type":12,"member_id":"..."}` 不再生效。
-3. 客户端收到 `ping` 必须回复 `pong`（或在每个周期内发送任意消息），否则约 50 秒后断开。
-4. 需要直接对外监听时，把 `gateway_address` 改回 `websocket://0.0.0.0:8201`。
-5. 自定义事件类建议改为继承 `youvision\WorkermanEvents` 并使用钩子。
-6. 设置 `secret_key`，推送方会自动使用同一个值。
-
-### 2.0 消息格式变更
-
-- 服务端下发的所有消息改为 `{"type","data","msg_id"}`，客户端需从 `data` 中读取字段（如 `data.client_id`、`data.reason`）
-- 自定义 `gateway_ping_data` 的项目建议改为 `{"type":"ping","data":{}}`
-- 子类的 `onClientMessage` 增加第四个参数 `string $msg_id`
 
 ## 测试
 

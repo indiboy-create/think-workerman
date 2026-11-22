@@ -103,28 +103,6 @@ class WorkermanEventsTest extends TestCase
         $this->assertSame([['authed', '1001']], TestEvents::$hooks);
     }
 
-    public function testAuthByFlatMessage(): void
-    {
-        $this->send(['type' => 'auth', 'token' => 'good']);
-
-        $this->assertSame('1001', $this->gw->bound['c1'] ?? null);
-    }
-
-    public function testAuthByLegacyType(): void
-    {
-        $this->send(['type' => 12, 'token' => 'good']);
-        $this->assertSame('1001', $this->gw->bound['c1'] ?? null);
-    }
-
-    public function testLegacyTypeDisabled(): void
-    {
-        TestEvents::$config['legacy_types'] = false;
-        $this->send(['type' => 12, 'token' => 'good']);
-
-        $this->assertSame([], $this->gw->bound);
-        $this->assertSame([], $this->gw->sent);
-    }
-
     public function testAuthByHeader(): void
     {
         TestEvents::onWebSocketConnect('c1', ['server' => ['HTTP_AUTHORIZATION' => 'Bearer good']]);

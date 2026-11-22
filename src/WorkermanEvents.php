@@ -16,7 +16,7 @@ use youvision\support\Protocol;
  * 流程：
  *   连接 → 下发 welcome
  *   握手请求头带 Authorization: Bearer xxx → 直接鉴权
- *   否则客户端发送 {"type":"auth","token":"xxx"} → 鉴权
+ *   否则客户端发送 {"type":"auth","data":{"token":"xxx"}} → 鉴权
  *   auth_timeout 秒内未鉴权 → 断开
  *   ping / pong 由服务端心跳处理，业务消息交给 onClientMessage
  *
@@ -80,7 +80,7 @@ class WorkermanEvents
 
     public static function onMessage(string $client_id, string $message): void
     {
-        $parsed = Protocol::decode($message, (bool) static::config('legacy_types', true));
+        $parsed = Protocol::decode($message);
         if ($parsed === null) {
             return;
         }

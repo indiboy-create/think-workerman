@@ -25,18 +25,16 @@ class ProtocolTest extends TestCase
         $this->assertSame(['x', [], ''], Protocol::decode('{"type":"x","data":"bad"}'));
     }
 
-    public function testDecodeFlatCompat(): void
+    public function testDecodeRejectsNonStringType(): void
     {
-        $this->assertSame(['auth', ['token' => 't'], 'a'], Protocol::decode('{"type":"auth","token":"t","msg_id":"a"}'));
-        $this->assertSame(['pong', [], ''], Protocol::decode('{"type":"pong"}'));
+        $this->assertNull(Protocol::decode('{"type":12,"data":{"token":"t"}}'));
+        $this->assertNull(Protocol::decode('{"type":""}'));
     }
 
-    public function testDecodeLegacyType(): void
+    public function testDecodeIgnoresTopLevelFields(): void
     {
-        $this->assertSame('auth', Protocol::decode('{"type":12,"token":"t"}')[0]);
-        $this->assertSame('auth', Protocol::decode('{"type":"12"}')[0]);
-        $this->assertNull(Protocol::decode('{"type":12}', false));
-        $this->assertNull(Protocol::decode('{"type":99}'));
+        // data 之外的字段不会被读取
+        $this->assertSame(['auth', [], ''], Protocol::decode('{"type":"auth","token":"t"}'));
     }
 
     public function testDecodeInvalid(): void

@@ -43,9 +43,6 @@ return [
     // 连接建立后必须在多少秒内完成鉴权，超时断开；0 表示不限制（不建议）
     'auth_timeout' => 10,
 
-    // 是否兼容 1.x 的数字消息类型（11 = welcome，12 = auth）
-    // 兼容模式下 type=12 仍然必须携带 token，不再接受裸 member_id
-    'legacy_types' => true,
 
     // gateway 进程名称，用于进程列表展示
     'gateway_name' => 'gateway',

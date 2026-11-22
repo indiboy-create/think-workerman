@@ -17,46 +17,23 @@ final class Protocol
     public const string KICKED = 'kicked';
     public const string ERROR = 'error';
 
-    /** 1.x 数字类型 → 2.x 字符串类型 */
-    private const array LEGACY = [
-        11 => self::WELCOME,
-        12 => self::AUTH,
-    ];
-
     /**
      * 解析客户端消息，返回 [type, data, msg_id]；不是合法消息时返回 null
      *
-     * 标准格式：{"type":"xxx","data":{...},"msg_id":"..."}
-     * 兼容扁平格式：{"type":"auth","token":"..."}，除 type / msg_id 外的字段视为 data
+     * 格式：{"type":"xxx","data":{...},"msg_id":"..."}
+     * type 必须是非空字符串；data 缺省或不是对象时视为空数组
      */
-    public static function decode(string $message, bool $legacy = true): ?array
+    public static function decode(string $message): ?array
     {
         $raw = json_decode($message, true);
-        if (!is_array($raw) || array_is_list($raw) || !isset($raw['type']) || !is_scalar($raw['type'])) {
+        if (!is_array($raw) || array_is_list($raw) || !isset($raw['type']) || !is_string($raw['type']) || $raw['type'] === '') {
             return null;
         }
 
-        $type = $raw['type'];
-        if (is_int($type) || ctype_digit((string) $type)) {
-            if (!$legacy) {
-                return null;
-            }
-            $type = self::LEGACY[(int) $type] ?? null;
-            if ($type === null) {
-                return null;
-            }
-        }
-
+        $data = isset($raw['data']) && is_array($raw['data']) ? $raw['data'] : [];
         $msgId = isset($raw['msg_id']) && is_scalar($raw['msg_id']) ? (string) $raw['msg_id'] : '';
 
-        if (array_key_exists('data', $raw)) {
-            $data = is_array($raw['data']) ? $raw['data'] : [];
-        } else {
-            $data = $raw;
-            unset($data['type'], $data['msg_id']);
-        }
-
-        return [strtolower((string) $type), $data, $msgId];
+        return [strtolower($raw['type']), $data, $msgId];
     }
 
     /**
