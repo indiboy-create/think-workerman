@@ -1,0 +1,58 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  phpunit:
+    name: PHP ${{ matrix.php }} / ${{ matrix.os }} / ${{ matrix.deps }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        php: ['8.3', '8.4']
+        deps: [highest]
+        include:
+          # 最低依赖版本，确保 composer.json 中的下限真实可用
+          - os: ubuntu-latest
+            php: '8.3'
+            deps: lowest
+          # Windows 下分进程启动，确认代码在 Windows 上也能加载和通过测试
+          - os: windows-latest
+            php: '8.3'
+            deps: highest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: json, pcntl, posix
+          coverage: none
+          tools: composer:v2
+
+      - name: Validate composer.json
+        run: composer validate --strict --no-check-publish
+
+      - uses: ramsey/composer-install@v3
+        with:
+          dependency-versions: ${{ matrix.deps }}
+
+      - name: PHP lint
+        if: runner.os == 'Linux'
+        run: find src tests -name '*.php' -print0 | xargs -0 -n1 php -l > /dev/null
+
+      - name: PHPUnit
+        run: vendor/bin/phpunit

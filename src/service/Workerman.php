@@ -9,15 +9,17 @@ use youvision\command\Business;
 use youvision\command\Gateway as GatewayCommand;
 use youvision\command\Register;
 use youvision\command\Workerman as WorkermanCommand;
+use youvision\support\Worker;
 
 class Workerman extends Service
 {
     /**
-     * 注册扩展提供的控制台命令
+     * 配置推送客户端并注册扩展提供的控制台命令
      */
     public function boot(): void
     {
-        Gateway::$registerAddress = (string) (config('workerman.register_address') ?: '127.0.0.1:1201');
+        Gateway::$registerAddress = Worker::registerAddress();
+        Gateway::$secretKey = Worker::secretKey();
 
         $this->commands([
             WorkermanCommand::class,
